@@ -10,53 +10,45 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "raw", schema = "mss_analytics")
+@Table(schema = "mss_analytics", name = "raw")
 public class Raw {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "url_id")
-    private String url_id;
+    @Column(name = "url_id", nullable = false)
+    private String urlId;
 
-    @Column(name = "hit_time")
-    private java.sql.Timestamp hit_time;
+    @Column(name = "hit_time", nullable = false)
+    private Timestamp hitTime;
 
     @Column(name = "ip_address")
-    private String ip_address;
+    private String ipAddress;
 
-    // Getters and setters
+    protected Raw() {
+    }
+
+    public Raw(String urlId, Timestamp hitTime, String ipAddress) {
+        this.urlId = urlId;
+        this.hitTime = hitTime;
+        this.ipAddress = ipAddress;
+    }
+
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public String getUrlId() {
+        return urlId;
     }
 
-    public String getUrl_id() {
-        return url_id;
+    public Timestamp getHitTime() {
+        return hitTime;
     }
 
-    public void setUrl_id(String url_id) {
-        this.url_id = url_id;
-    }
-
-    public Timestamp getHit_time() {
-        return hit_time;
-    }
-
-    public void setHit_time(Timestamp hit_time) {
-        this.hit_time = hit_time;
-    }
-
-    public String getIp_address() {
-        return ip_address;
-    }
-
-    public void setIp_address(String ip_address) {
-        this.ip_address = ip_address;
+    public String getIpAddress() {
+        return ipAddress;
     }
 
 }

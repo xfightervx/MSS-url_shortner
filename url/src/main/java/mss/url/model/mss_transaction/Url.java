@@ -10,12 +10,13 @@ import jakarta.persistence.Table;
 public class Url {
 
     @Id
-    @Column (name = "short_url")
+    @Column(name = "short_url")
     private String shortUrl;
-    @Column (name = "url")
+    @Column(name = "url")
     private String url;
-    @Column (name = "user_id")
-    private int userId;
+    @Column(name = "user_id")
+    private Integer userId;
+
     public String getShortUrl() {
         return shortUrl;
     }
@@ -32,11 +33,11 @@ public class Url {
         this.url = url;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
