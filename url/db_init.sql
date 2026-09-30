@@ -4,6 +4,7 @@ CREATE DATABASE mss_db;
 Drop user if exists mss_admin;
 CREATE USER mss_admin WITH PASSWORD '0';
 
+alter database mss_db owner to mss_admin;
 
 GRANT CONNECT ON DATABASE mss_db TO mss_admin;
 
@@ -21,19 +22,19 @@ create schema mss_analytics;
 
 create table mss_transaction.user (
     id serial primary key,
-    username varchar(32) not null,
-    password varchar(64) not null
+    username varchar(255) not null,
+    password varchar(255) not null
 );
 
 create table mss_transaction.url (
-    short_url varchar(16) primary key,
+    short_url varchar(255) primary key,
     user_id int not null references mss_transaction.user(id) on delete cascade,
-    url varchar(64) not null
+    url varchar(255) not null
 );
 
 create table mss_analytics.raw (
     id serial primary key,
-    url_id varchar(16) not null references mss_transaction.url(short_url) on delete cascade,
+    url_id varchar(255) not null references mss_transaction.url(short_url) on delete cascade,
     hit_time timestamp not null default current_timestamp,
-    ip_address varchar(16) not null
+    ip_address varchar(255) not null
 );

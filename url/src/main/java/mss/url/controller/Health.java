@@ -1,4 +1,4 @@
-package com.mss.url_shortner.controller;
+package mss.url.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 
