@@ -1,6 +1,6 @@
 package mss.url.controller;
 
-import mss.url.model.Url;
+import mss.url.model.mss_transaction.Url;
 import mss.url.repository.UrlRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ public class Redirect {
                         HttpStatus.NOT_FOUND, "URL not found for short URL: " + shortUrl));
 
         return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
-                .header(HttpHeaders.LOCATION, url.getLongUrl())
+                .header(HttpHeaders.LOCATION, url.getUrl())
                 .build();
     }
 }
