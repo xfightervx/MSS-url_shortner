@@ -1,1 +1,2 @@
-run : ./mvnw spring-boot:run
+run : 
+	./mvnw spring-boot:run
