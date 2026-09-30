@@ -2,7 +2,10 @@ package mss.url.model.mss_analytics;
 
 import java.sql.Timestamp;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -11,9 +14,16 @@ import jakarta.persistence.Table;
 public class Raw {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "url_id")
     private String url_id;
-    private Timestamp hit_time;
+
+    @Column(name = "hit_time")
+    private java.sql.Timestamp hit_time;
+
+    @Column(name = "ip_address")
     private String ip_address;
 
     // Getters and setters

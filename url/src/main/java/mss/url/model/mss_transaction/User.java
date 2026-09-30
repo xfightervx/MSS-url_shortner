@@ -1,15 +1,19 @@
 package mss.url.model.mss_transaction;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user", schema = "mss_transaction")
+@Table(schema = "mss_transaction", name = "users")
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     private String username;
     private String password;
 
