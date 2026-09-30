@@ -4,6 +4,7 @@ CREATE DATABASE mss_db;
 Drop user if exists mss_admin;
 CREATE USER mss_admin WITH PASSWORD '0';
 
+alter database mss_db owner to mss_admin;
 
 GRANT CONNECT ON DATABASE mss_db TO mss_admin;
 
