@@ -1,5 +1,6 @@
 package mss.url.model.mss_transaction;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -9,16 +10,18 @@ import jakarta.persistence.Table;
 public class Url {
 
     @Id
-    private String short_url;
+    @Column (name = "short_url")
+    private String shortUrl;
+    @Column (name = "url")
     private String url;
-    private int user_id;
-
-    public String getShort_url() {
-        return short_url;
+    @Column (name = "user_id")
+    private int userId;
+    public String getShortUrl() {
+        return shortUrl;
     }
 
-    public void setShort_url(String short_url) {
-        this.short_url = short_url;
+    public void setShortUrl(String shortUrl) {
+        this.shortUrl = shortUrl;
     }
 
     public String getUrl() {
@@ -29,17 +32,17 @@ public class Url {
         this.url = url;
     }
 
-    public int getUser_id() {
-        return user_id;
+    public int getUserId() {
+        return userId;
     }
 
-    public void setUser_id(int user_id) {
-        this.user_id = user_id;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     @Override
     public String toString() {
-        return "Url [short_url=" + short_url + ", url=" + url + ", user_id=" + user_id + "]";
+        return "Url [shortUrl=" + shortUrl + ", url=" + url + ", userId=" + userId + "]";
     }
 
 }
