@@ -2,14 +2,14 @@
 
 psql := .first_run
 
+run: $(psql)
+	./mvnw spring-boot:run
+
 
 clean:
 	rm -f .first_run
 	rm -f ./target/*.jar
 
-
-run: $(psql)
-	./mvnw spring-boot:run
 
 debug :
 	./mvnw -X spring-boot:run
