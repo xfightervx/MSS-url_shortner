@@ -1,19 +1,24 @@
 package mss.url.service;
 
-import mss.url.dto.CreateLinkRequest;
-import mss.url.dto.LinkResponse;
-import mss.url.exception.*;
-import mss.url.model.mss_transaction.Url;
-import mss.url.model.mss_transaction.User;
-import mss.url.repository.UrlRepository;
-import mss.url.repository.UserRepository;
+import java.util.zip.CRC32;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.zip.CRC32;
+
+import mss.url.dto.CreateLinkRequest;
+import mss.url.dto.LinkResponse;
+import mss.url.exception.InvalidRequestException;
+import mss.url.exception.LinkNotFoundException;
+import mss.url.model.mss_transaction.Url;
+import mss.url.model.mss_transaction.User;
+import mss.url.repository.UrlRepository;
+import mss.url.repository.UserRepository;
+
 @Service
 public class UrlService {
+
     private final UrlRepository urlRepository;
     private final UserRepository userRepository;
     private final String baseUrl;
@@ -29,16 +34,19 @@ public class UrlService {
 
     @Transactional
     /**
-     * Creates a short link for the requested URL and user.
-     * it require the user to exist in the database, otherwise it will throw an InvalidRequestException.
-     * it generate a short code by getting the first 8 characters of the CRC32 hash of the concatenation of the user id and the requested URL.
-     * one it detecte a collision, it will increment the user id by 1e9 and generate a new code until the uniqueness is insured
+     * Creates a short link for the requested URL and user. it require the user
+     * to exist in the database, otherwise it will throw an
+     * InvalidRequestException. it generate a short code by getting the first 8
+     * characters of the CRC32 hash of the concatenation of the user id and the
+     * requested URL. one it detecte a collision, it will increment the user id
+     * by 1e9 and generate a new code until the uniqueness is insured
+     *
      * @param request the link creation request
      * @return the created link details
      * @throws InvalidRequestException if the requested user does not exist
      */
     public LinkResponse create(CreateLinkRequest request) {
-        
+
         String target = request.url() == null ? null : request.url().trim();
         if (!validUser(request.user_id())) {
             throw new InvalidRequestException("User not found");
@@ -62,6 +70,13 @@ public class UrlService {
         return urlRepository.findByShortUrl(code)
                 .map(this::toResponse)
                 .orElseThrow(() -> new LinkNotFoundException(code));
+    }
+
+    @Transactional(readOnly = true)
+    public String resolve(String shortUrl, String clientIp) {
+        return urlRepository.findByShortUrl(shortUrl)
+                .map(Url::getUrl)
+                .orElseThrow(() -> new LinkNotFoundException(shortUrl));
     }
 
     private String resolveCode(String url, int userId) {
