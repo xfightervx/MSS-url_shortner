@@ -1,0 +1,12 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    { path: '/', name: 'home', component: () => import('../LinkStudio.vue') },
+    { path: '/redirect/:shortUrl', name: 'redirect', component: () => import('../LinkStudio.vue') },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
+  ],
+})
+
+export default router
