@@ -2,51 +2,53 @@ package mss.url.service;
 
 import mss.url.dto.CreateLinkRequest;
 import mss.url.dto.LinkResponse;
-import mss.url.event.UrlHitEvent;
 import mss.url.exception.*;
 import mss.url.model.mss_transaction.Url;
+import mss.url.model.mss_transaction.User;
 import mss.url.repository.UrlRepository;
+import mss.url.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.util.regex.Pattern;
-
+import java.util.zip.CRC32;
 @Service
 public class UrlService {
-
-    private static final String ALPHABET
-            = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    private static final int CODE_LENGTH = 7;
-    private static final int MAX_ATTEMPTS = 5;
-    private static final int MAX_URL_LENGTH = 2048;
-    private static final Pattern ALIAS_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{3,32}$");
-
-    private final SecureRandom random = new SecureRandom();
     private final UrlRepository urlRepository;
-    private final ApplicationEventPublisher events;
+    private final UserRepository userRepository;
     private final String baseUrl;
 
     public UrlService(UrlRepository urlRepository,
+            UserRepository userRepository,
             ApplicationEventPublisher events,
             @Value("${app.base-url}") String baseUrl) {
         this.urlRepository = urlRepository;
-        this.events = events;
+        this.userRepository = userRepository;
         this.baseUrl = baseUrl;
     }
 
     @Transactional
+    /**
+     * Creates a short link for the requested URL and user.
+     * it require the user to exist in the database, otherwise it will throw an InvalidRequestException.
+     * it generate a short code by getting the first 8 characters of the CRC32 hash of the concatenation of the user id and the requested URL.
+     * one it detecte a collision, it will increment the user id by 1e9 and generate a new code until the uniqueness is insured
+     * @param request the link creation request
+     * @return the created link details
+     * @throws InvalidRequestException if the requested user does not exist
+     */
     public LinkResponse create(CreateLinkRequest request) {
+        
         String target = request.url() == null ? null : request.url().trim();
-        validateTargetUrl(target);
-
-        String code = resolveCode(request.alias());
-
+        if (!validUser(request.user_id())) {
+            throw new InvalidRequestException("User not found");
+        }
+        int userid = request.user_id();
+        String code;
+        do {
+            code = resolveCode(request.url(), userid);
+            userid += 1e9;
+        } while (validUrl(code));
         Url url = new Url();
         url.setShortUrl(code);
         url.setUrl(target);
@@ -56,64 +58,26 @@ public class UrlService {
     }
 
     @Transactional(readOnly = true)
-    public String resolve(String code, String ipAddress) {
-        Url url = urlRepository.findByShortUrl(code)
-                .orElseThrow(() -> new LinkNotFoundException(code));
-        events.publishEvent(new UrlHitEvent(code, ipAddress, Instant.now()));
-        return url.getUrl();
-    }
-
-    @Transactional(readOnly = true)
     public LinkResponse get(String code) {
         return urlRepository.findByShortUrl(code)
                 .map(this::toResponse)
                 .orElseThrow(() -> new LinkNotFoundException(code));
     }
 
-    private String resolveCode(String alias) {
-        if (alias != null && !alias.isBlank()) {
-            if (!ALIAS_PATTERN.matcher(alias).matches()) {
-                throw new InvalidRequestException(
-                        "Alias must be 3-32 characters: letters, digits, '-' or '_'");
-            }
-            if (urlRepository.existsById(alias)) {
-                throw new AliasTakenException(alias);
-            }
-            return alias;
-        }
-        for (int i = 0; i < MAX_ATTEMPTS; i++) {
-            String candidate = randomCode();
-            if (!urlRepository.existsById(candidate)) {
-                return candidate;
-            }
-        }
-        throw new IllegalStateException("Could not generate a unique code");
+    private String resolveCode(String url, int userId) {
+        CRC32 crc32 = new CRC32();
+        crc32.update((userId + url).getBytes());
+        return Long.toHexString(crc32.getValue()).substring(0, 8);
     }
 
-    private String randomCode() {
-        StringBuilder sb = new StringBuilder(CODE_LENGTH);
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            sb.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
-        }
-        return sb.toString();
+    private boolean validUrl(String hash) {
+        Url url = urlRepository.findByShortUrl(hash).orElse(null);
+        return url != null;
     }
 
-    private void validateTargetUrl(String target) {
-        if (target == null || target.isEmpty() || target.length() > MAX_URL_LENGTH) {
-            throw new InvalidRequestException("URL is required and must be at most 2048 characters");
-        }
-        URI uri;
-        try {
-            uri = new URI(target);
-        } catch (URISyntaxException e) {
-            throw new InvalidRequestException("Malformed URL");
-        }
-        String scheme = uri.getScheme();
-        if (scheme == null
-                || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-                || uri.getHost() == null) {
-            throw new InvalidRequestException("URL must be an absolute http(s) URL");
-        }
+    private boolean validUser(int userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        return user != null;
     }
 
     private LinkResponse toResponse(Url url) {
