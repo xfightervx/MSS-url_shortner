@@ -2,6 +2,7 @@ package mss.url.service;
 
 import mss.url.dto.CreateLinkRequest;
 import mss.url.dto.LinkResponse;
+import mss.url.event.UrlHitEvent;
 import mss.url.exception.*;
 import mss.url.model.mss_transaction.Url;
 import mss.url.model.mss_transaction.User;
@@ -12,6 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.zip.CRC32;
+import java.time.Instant;
 @Service
 public class UrlService {
     private final UrlRepository urlRepository;
@@ -68,6 +70,13 @@ public class UrlService {
         CRC32 crc32 = new CRC32();
         crc32.update((userId + url).getBytes());
         return Long.toHexString(crc32.getValue()).substring(0, 8);
+    }
+
+    public String resolve(String shortUrl, String clientIp) {
+        UrlHitEvent event = new UrlHitEvent(shortUrl, clientIp, Instant.now());
+        Url url = urlRepository.findByShortUrl(shortUrl)
+                .orElse(null);
+        return url != null ? url.getUrl() : baseUrl + "/error/404";
     }
 
     private boolean validUrl(String hash) {
